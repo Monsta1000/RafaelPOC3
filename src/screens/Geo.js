@@ -106,7 +106,7 @@ function Geo({ initialRegion }) {
                 followsUserLocation={false}
                 onUserLocationChange={
                     event => {
-                        //this.map.animateCamera({ center: event.nativeEvent.coordinate });
+                        this.map.animateCamera({ center: event.nativeEvent.coordinate });
                     }
                 }
                 initialRegion={initialRegion}
