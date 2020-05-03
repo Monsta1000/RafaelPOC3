@@ -6,28 +6,14 @@
  * @flow strict-local
  */
 
-import React, {useEffect, useState} from 'react';
-import {
-    SafeAreaView,
-    StyleSheet,
-    ScrollView,
-    View,
-    Text,
-    StatusBar, AppRegistry,
-} from 'react-native';
-
-import {
-    Header,
-    LearnMoreLinks,
-    Colors,
-    DebugInstructions,
-    ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-import Geo from './src/screens/Geo';
+import React, { useEffect, useState } from 'react';
+import { View, SafeAreaView } from 'react-native';
 import BackgroundGeolocation from 'react-native-background-geolocation';
-import {useDispatch, useSelector} from 'react-redux';
-import {addLocation, setRunning} from './src/redux/actions/geoActions';
+import { useDispatch, useSelector } from 'react-redux';
+import { addLocation, setRunning } from './src/redux/actions/geoActions';
 import store from './src/redux/Store';
+import Geo from './src/screens/Geo';
+import Database from './src/utils/Database'
 
 const HeadlessTask = async (event) => {
     let data = event.params;
@@ -45,13 +31,26 @@ const App: () => React$Node = () => {
     const dispatch = useDispatch();
     const [initialRegion, setInitialRegion] = useState(null);
 
+    const inidDatabase = async () => {
+        await Database.executeSql('CREATE TABLE IF NOT EXISTS GeoLocations(id INTEGER PRIMARY KEY AUTOINCREMENT, date Text, data VARCHAR)');
+        console.log("Database created")
+    }
+
+    const insertLocation = async (location) => {
+        //console.log("OnLocation", location)
+
+        const results = await Database.executeSql('INSERT INTO GeoLocations (date, data) VALUES (?,?)', [Date.now(), JSON.stringify(location)]);
+        console.log("INSERT LOCATION", results);
+    }
+
     useEffect(() => {
         if (isRunning) {
             BackgroundGeolocation.start(() => {
                 BackgroundGeolocation.getCurrentPosition(null, (location) => {
                     setInitialRegion({
                         longitude: location.coords.longitude, latitude: location.coords.latitude, latitudeDelta: 0.05,
-                        longitudeDelta: 0.05}
+                        longitudeDelta: 0.05
+                    }
                     );
                 }, () => {
 
@@ -68,8 +67,11 @@ const App: () => React$Node = () => {
     }, [isRunning]);
 
     useEffect(() => {
+        inidDatabase();
+
         BackgroundGeolocation.onLocation(
             location => {
+                insertLocation(location);
                 dispatch(addLocation(location));
             },
             error => {
@@ -107,7 +109,8 @@ const App: () => React$Node = () => {
                 BackgroundGeolocation.getCurrentPosition(null, (location) => {
                     setInitialRegion({
                         longitude: location.coords.longitude, latitude: location.coords.latitude, latitudeDelta: 0.05,
-                        longitudeDelta: 0.05}
+                        longitudeDelta: 0.05
+                    }
                     );
                 }, () => {
 
@@ -117,9 +120,9 @@ const App: () => React$Node = () => {
     }, []);
 
     return (
-        <View style={{flex: 1}}>
-            <Geo initialRegion={initialRegion}/>
-        </View>
+        <SafeAreaView style={{ flex: 1 }}>
+            <Geo initialRegion={initialRegion} />
+        </SafeAreaView>
     );
 };
 

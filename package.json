@@ -15,6 +15,7 @@
     "react-native-background-fetch": "^3.0.4",
     "react-native-background-geolocation": "^3.6.2",
     "react-native-maps": "0.27.1",
+    "react-native-sqlite-storage": "^5.0.0",
     "react-redux": "^7.2.0",
     "redux": "^4.0.5"
   },
