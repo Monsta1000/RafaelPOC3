@@ -6,14 +6,14 @@
  * @flow strict-local
  */
 
-import React, { useEffect, useState } from 'react';
-import { View, SafeAreaView } from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {View, SafeAreaView} from 'react-native';
 import BackgroundGeolocation from 'react-native-background-geolocation';
-import { useDispatch, useSelector } from 'react-redux';
-import { addLocation, setRunning } from './src/redux/actions/geoActions';
+import {useDispatch, useSelector} from 'react-redux';
+import {addLocation, setRunning} from './src/redux/actions/geoActions';
 import store from './src/redux/Store';
 import Geo from './src/screens/Geo';
-import Database from './src/utils/Database'
+import Database from './src/utils/Database';
 
 const HeadlessTask = async (event) => {
     let data = event.params;
@@ -21,7 +21,7 @@ const HeadlessTask = async (event) => {
 
     if (event.name === 'location') {
         store.dispatch(addLocation(data));
-        await Database.executeSql('INSERT INTO GeoLocations (date, data) VALUES (?,?)', [Date.now(), JSON.stringify(data)])
+        await Database.executeSql('INSERT INTO GeoLocations (date, data) VALUES (?,?)', [Date.now(), JSON.stringify(data)]);
     }
 };
 
@@ -34,36 +34,38 @@ const App: () => React$Node = () => {
 
     const inidDatabase = async () => {
         await Database.executeSql('CREATE TABLE IF NOT EXISTS GeoLocations(id INTEGER PRIMARY KEY AUTOINCREMENT, date Text, data VARCHAR)');
-        console.log("Database created")
-    }
+        console.log('Database created');
+    };
 
     const insertLocation = async (location) => {
         //console.log("OnLocation", location)
 
         const results = await Database.executeSql('INSERT INTO GeoLocations (date, data) VALUES (?,?)', [Date.now(), JSON.stringify(location)]);
-        console.log("INSERT LOCATION", results);
-    }
+        console.log('INSERT LOCATION', results);
+    };
 
     useEffect(() => {
-        if (isRunning) {
-            BackgroundGeolocation.start(() => {
-                BackgroundGeolocation.getCurrentPosition(null, (location) => {
-                    setInitialRegion({
-                        longitude: location.coords.longitude, latitude: location.coords.latitude, latitudeDelta: 0.05,
-                        longitudeDelta: 0.05
-                    }
-                    );
+        if (isRunning !== null) {
+            if (!!isRunning) {
+                BackgroundGeolocation.start(() => {
+                    BackgroundGeolocation.getCurrentPosition(null, (location) => {
+                        setInitialRegion({
+                                longitude: location.coords.longitude, latitude: location.coords.latitude, latitudeDelta: 0.05,
+                                longitudeDelta: 0.05,
+                            },
+                        );
+                    }, () => {
+
+                    });
                 }, () => {
 
                 });
-            }, () => {
+            } else {
+                BackgroundGeolocation.stop(() => {
+                }, () => {
 
-            });
-        } else {
-            BackgroundGeolocation.stop(() => {
-            }, () => {
-
-            });
+                });
+            }
         }
     }, [isRunning]);
 
@@ -91,38 +93,39 @@ const App: () => React$Node = () => {
 
         BackgroundGeolocation.ready({
             distanceFilter: 10,
-            desiredAccuracy: BackgroundGeolocation.DESIRED_ACCURACY_HIGH,
+            desiredAccuracy: Platform.OS === 'ios'
+                ? BackgroundGeolocation.DESIRED_ACCURACY_NAVIGATION
+                : BackgroundGeolocation.DESIRED_ACCURACY_HIGH,
             locationAuthorizationRequest: 'Always',
-            disableMotionActivityUpdates: true,
+            disableMotionActivityUpdates: false,
             debug: true,
             logLevel: BackgroundGeolocation.LOG_LEVEL_VERBOSE,
             stopOnTerminate: false,
             startOnBoot: true,
             enableHeadless: true,
+            pausesLocationUpdatesAutomatically: false,
             // url: 'http://52.178.157.219:8081/StringLocations',
             batchSync: false,
             // autoSync: true,
         }, (state) => {
             console.log('START', state.enabled);
-            dispatch(setRunning(state.enabled));
+            // dispatch(setRunning(state.enabled));
 
-            if (state.enabled) {
-                BackgroundGeolocation.getCurrentPosition(null, (location) => {
-                    setInitialRegion({
+            BackgroundGeolocation.getCurrentPosition(null, (location) => {
+                setInitialRegion({
                         longitude: location.coords.longitude, latitude: location.coords.latitude, latitudeDelta: 0.05,
-                        longitudeDelta: 0.05
-                    }
-                    );
-                }, () => {
+                        longitudeDelta: 0.05,
+                    },
+                );
+            }, () => {
 
-                });
-            }
+            });
         });
     }, []);
 
     return (
-        <SafeAreaView style={{ flex: 1 }}>
-            <Geo initialRegion={initialRegion} />
+        <SafeAreaView style={{flex: 1}}>
+            <Geo initialRegion={initialRegion}/>
         </SafeAreaView>
     );
 };

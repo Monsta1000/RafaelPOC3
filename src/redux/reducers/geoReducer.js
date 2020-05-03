@@ -4,7 +4,7 @@ import {
 
 const initialState = {
     locations: [],
-    running: false
+    running: null
 };
 
 export default ((state = initialState, action) => {
