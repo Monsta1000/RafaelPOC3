@@ -4,6 +4,7 @@ import MapView, { Marker } from 'react-native-maps';
 import { useDispatch, useSelector } from 'react-redux';
 import { setRunning, setLocations } from '../redux/actions/geoActions';
 import Database from '../utils/Database'
+import moment from 'moment'
 
 function Geo({ initialRegion }) {
     const running = useSelector(state => state.geoReducer.running);
@@ -14,7 +15,7 @@ function Geo({ initialRegion }) {
 
     useEffect(() => {
         onSelectAll();
-    },[]);
+    }, []);
 
     useEffect(() => {
         const markersArr = [];
@@ -30,7 +31,8 @@ function Geo({ initialRegion }) {
             {
                 item &&
                 item.coords &&
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text>{moment(item.timestamp).format('DD/MM HH:mm:ss')}</Text>
                     <Text>{`Lat: ${item.coords.latitude}, Lon: ${item.coords.longitude}`}</Text>
                 </View>
             }
@@ -38,7 +40,7 @@ function Geo({ initialRegion }) {
     );
 
     const selectAll = async () => {
-        const results = await Database.executeSql('SELECT * FROM GeoLocations ORDER BY id DESC');
+        const results = await Database.executeSql('SELECT * FROM GeoLocations ORDER BY id');
         let locations = [];
 
         const rows = results.rows;
@@ -91,7 +93,7 @@ function Geo({ initialRegion }) {
             <View style={{ flex: 1, marginTop: 20, paddingHorizontal: 20 }}>
                 {locations &&
                     <FlatList
-                        data={locations}
+                        data={locations.sort((a, b) => b.timestamp.localeCompare(a.timestamp))}
                         renderItem={renderItem}
                         keyExtractor={(item, i) => i.toString()}
                     />
