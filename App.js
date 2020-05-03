@@ -21,6 +21,7 @@ const HeadlessTask = async (event) => {
 
     if (event.name === 'location') {
         store.dispatch(addLocation(data));
+        await Database.executeSql('INSERT INTO GeoLocations (date, data) VALUES (?,?)', [Date.now(), JSON.stringify(data)])
     }
 };
 

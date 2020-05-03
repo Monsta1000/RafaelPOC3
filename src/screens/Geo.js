@@ -103,10 +103,10 @@ function Geo({ initialRegion }) {
                 ref={map => this.map = map}
                 style={{ flex: 1, marginTop: 10 }}
                 showsUserLocation={true}
-                followsUserLocation={true}
+                followsUserLocation={false}
                 onUserLocationChange={
                     event => {
-                        this.map.animateCamera({ center: event.nativeEvent.coordinate });
+                        //this.map.animateCamera({ center: event.nativeEvent.coordinate });
                     }
                 }
                 initialRegion={initialRegion}
@@ -115,7 +115,7 @@ function Geo({ initialRegion }) {
                     markers.map((marker, i) => {
                         return (
                             <Marker
-                                key={i}
+                                key={`${i}${Date.now()}`}
                                 coordinate={marker.latlng}
                             />
                         );
